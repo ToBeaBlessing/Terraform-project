@@ -24,9 +24,9 @@ module "security_group" {
 
 module "ec2" {
   source                   = "./ec2"
-  ami_id                   = var.ec2_ami_id
+  ami_id                   = data.aws_ami.amazon_linux_2023.id
   instance_type            = "t2.micro"
-  tag_name                 = "Ubuntu Linux EC2"
+  tag_name                 = "Amazon Linux EC2"
   public_key               = var.public_key
   subnet_id                = tolist(module.networking.dev_proj_1_public_subnets)[0]
   sg_enable_ssh_https      = module.security_group.sg_ec2_sg_ssh_http_id
@@ -85,4 +85,14 @@ module "rds_db_instance" {
   mysql_username       = "dbuser"
   mysql_password       = "dbpassword"
   mysql_dbname         = "devprojdb"
+}
+
+data "aws_ami" "amazon_linux_2023" {
+  most_recent = true
+  owners      = ["amazon"]
+
+  filter {
+    name   = "name"
+    values = ["al2023-ami-kernel-6.1-x86_64"]
+  }
 }
