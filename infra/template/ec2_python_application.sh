@@ -1,32 +1,51 @@
 #!/bin/bash
-# 1. Start Logging (Everything will now go to /var/log/user-data.log)
-exec > >(tee /var/log/user-data.log|logger -t user-data -s 2>/dev/console) 2>&1
+# 1. Improved Logging - Ensures the log file exists and has correct permissions
+LOG_FILE="/var/log/user-data.log"
+touch $LOG_FILE
+chmod 666 $LOG_FILE
+exec > >(tee -a $LOG_FILE | logger -t user-data -s 2>/dev/console) 2>&1
 
-echo "--- Starting User Data Script ---"
+echo "--- Starting User Data Script: $(date) ---"
 
-# 2. Use DNF (Amazon Linux package manager) instead of apt
+# 2. Update and Install with explicit 'yes' and error checking
+echo "Installing dependencies..."
 sudo dnf update -y
 sudo dnf install git python3-pip -y
 
-# 3. Use the correct home directory for ec2-user
+# 3. Setup Working Directory
 cd /home/ec2-user
 
-# 4. Clone your repository
-echo "Cloning repository..."
-git clone https://github.com/ToBeaBlessing/python-mysql-db-proj-1.git
-cd python-mysql-db-proj-1
+# 4. Clone Repository (Checks if directory exists first)
+if [ -d "python-mysql-db-proj-1" ]; then
+    echo "Directory already exists, pulling latest changes..."
+    cd python-mysql-db-proj-1
+    git pull
+else
+    echo "Cloning repository..."
+    git clone https://github.com/ToBeaBlessing/python-mysql-db-proj-1.git
+    cd python-mysql-db-proj-1
+fi
 
 # 5. Install Python dependencies
 echo "Installing requirements..."
+pip3 install --upgrade pip
 pip3 install -r requirements.txt
 
-# 6. Run the application
-# We use nohup and redirection to ensure the app stays running after the script ends
-echo "Waiting for 30 seconds before running the app.py"
-sleep 30
+# 6. DATABASE CONFIGURATION (Crucial Step)
+# Injecting the RDS endpoint directly into the shell session
+# Replace these values or use Terraform to template them
+export DB_HOST="mydb.cxe8mesgwpvq.eu-central-1.rds.amazonaws.com"
+export DB_USER="dbuser"
+export DB_PASS="dbpassword"
+export DB_NAME="devprojdb"
 
-# IMPORTANT: Ensure your app.py has app.run(host='0.0.0.0') 
-# otherwise the Load Balancer cannot reach it!
-nohup python3 app.py > app.log 2>&1 &
+# 7. Start Application
+echo "Starting the application..."
+# Kill any existing process on port 5000 to prevent 'Address already in use' errors
+sudo pkill -f app.py || true
 
-echo "--- User Data Script Finished ---"
+# nohup ensures the app keeps running after the shell exits
+# 'python3 -u' ensures logs are unbuffered (sent to app.log immediately)
+nohup python3 -u app.py > app.log 2>&1 &
+
+echo "--- User Data Script Finished: $(date) ---"
