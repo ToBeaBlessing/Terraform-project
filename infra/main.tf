@@ -47,7 +47,7 @@ module "lb_target_group" {
 module "alb" {
   source                    = "./load-balancer"
   lb_name                   = "dev-proj-1-alb"
-  is_external               = false
+  is_external               = true
   lb_type                   = "application"
   sg_enable_ssh_https       = module.security_group.sg_ec2_sg_ssh_http_id
   subnet_ids                = tolist(module.networking.dev_proj_1_public_subnets)

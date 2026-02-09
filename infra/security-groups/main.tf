@@ -19,6 +19,15 @@ resource "aws_security_group" "ec2_sg_ssh_http" {
   name        = var.ec2_sg_name
   description = "Enable the Port 22(SSH) & Port 80(http)"
   vpc_id      = var.vpc_id
+  
+# Add this inside the "ec2_sg_ssh_http" resource block
+  ingress {
+    description = "Allow Port 5000 for ALB access"
+    cidr_blocks = ["0.0.0.0/0"]
+    from_port   = 5000
+    to_port     = 5000
+    protocol    = "tcp"
+  }
 
   # ssh for terraform remote exec
   ingress {
