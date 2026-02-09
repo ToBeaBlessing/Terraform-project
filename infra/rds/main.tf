@@ -30,3 +30,8 @@ resource "aws_db_instance" "default" {
   deletion_protection     = false
 }
 
+output "rds_endpoint" {
+  # This makes the endpoint available to the root outputs.tf
+  # Ensure "aws_db_instance.db" matches your resource name inside this module
+  value = aws_db_instance.db.endpoint 
+}
