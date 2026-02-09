@@ -25,7 +25,7 @@ output "aws_lb_zone_id" {
 
 resource "aws_lb" "dev_proj_1_lb" {
   name               = var.lb_name
-  internal           = var.is_external
+  internal           = !var.is_external
   load_balancer_type = var.lb_type
   security_groups    = [var.sg_enable_ssh_https]
   subnets            = var.subnet_ids # Replace with your subnet IDs
@@ -54,7 +54,7 @@ resource "aws_lb_listener" "dev_proj_1_lb_listner" {
   }
 }
 
-# https listner on port 443
+/*# https listner on port 443
 resource "aws_lb_listener" "dev_proj_1_lb_https_listner" {
   load_balancer_arn = aws_lb.dev_proj_1_lb.arn
   port              = var.lb_https_listner_port
@@ -66,4 +66,4 @@ resource "aws_lb_listener" "dev_proj_1_lb_https_listner" {
     type             = var.lb_listner_default_action
     target_group_arn = var.lb_target_group_arn
   }
-}
+}*/
